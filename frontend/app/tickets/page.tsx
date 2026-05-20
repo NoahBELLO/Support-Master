@@ -143,6 +143,12 @@ export default function Tickets() {
                   </span>{' '}
                   · {formatDate(ticket.created_at)}
                 </span>
+                <span className="text-xs text-zinc-400 dark:text-zinc-500">
+                  Assigné à{' '}
+                  <span className="font-medium text-zinc-600 dark:text-zinc-300">
+                    {ticket.assignee_name ?? 'Non assigné'}
+                  </span>
+                </span>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <span

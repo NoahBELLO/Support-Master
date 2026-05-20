@@ -124,6 +124,28 @@ export default function NewTicket() {
             </select>
           </div>
 
+          <div className="flex items-start gap-2.5 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="mt-0.5 shrink-0 text-zinc-400"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
+            </svg>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              <span className="font-medium text-zinc-700 dark:text-zinc-300">Assignation</span>{' '}
+              — L&apos;assignation à un agent est gérée par l&apos;équipe support après création.
+            </p>
+          </div>
+
           {error && (
             <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950 dark:text-red-400">
               {error}
