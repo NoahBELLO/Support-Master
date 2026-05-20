@@ -1,4 +1,4 @@
-import { loginUser, registerUser, getMe } from '@/lib/api'
+import { loginUser, registerUser, getMe, getTickets, createTicket } from '@/lib/api'
 
 function mockFetch(ok: boolean, data: unknown) {
   global.fetch = jest.fn().mockResolvedValue({
@@ -88,5 +88,53 @@ describe('getMe', () => {
   it('lève une erreur si le token est invalide', async () => {
     mockFetch(false, { message: 'Session expirée' })
     await expect(getMe('bad-token')).rejects.toThrow('Session expirée')
+  })
+})
+
+describe('getTickets', () => {
+  afterEach(() => { (global.fetch as jest.Mock).mockReset() })
+
+  it('retourne la liste des tickets avec un token valide', async () => {
+    const tickets = [
+      { id: '1', title: 'Bug login', priority: 'high', status: 'open', creator_name: 'Alice', created_at: '' },
+    ]
+    mockFetch(true, tickets)
+
+    const result = await getTickets('tok')
+    expect(result).toEqual(tickets)
+    expect(global.fetch).toHaveBeenCalledWith(
+      'http://localhost:5000/api/tickets',
+      expect.objectContaining({ headers: { Authorization: 'Bearer tok' } })
+    )
+  })
+
+  it('lève une erreur si le token est invalide', async () => {
+    mockFetch(false, { message: 'Session expirée' })
+    await expect(getTickets('bad')).rejects.toThrow('Session expirée')
+  })
+})
+
+describe('createTicket', () => {
+  afterEach(() => { (global.fetch as jest.Mock).mockReset() })
+
+  it('retourne le ticket créé en cas de succès', async () => {
+    const ticket = { id: '1', title: 'Bug', description: 'Desc', priority: 'medium', status: 'open' }
+    mockFetch(true, ticket)
+
+    const result = await createTicket('tok', { title: 'Bug', description: 'Desc', priority: 'medium' })
+    expect(result).toEqual(ticket)
+    expect(global.fetch).toHaveBeenCalledWith(
+      'http://localhost:5000/api/tickets',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ title: 'Bug', description: 'Desc', priority: 'medium' }),
+        headers: expect.objectContaining({ Authorization: 'Bearer tok' }),
+      })
+    )
+  })
+
+  it('lève une erreur en cas d\'échec', async () => {
+    mockFetch(false, { message: 'Titre trop court' })
+    await expect(createTicket('tok', { title: 'Bug', description: 'Desc', priority: 'low' })).rejects.toThrow('Titre trop court')
   })
 })
