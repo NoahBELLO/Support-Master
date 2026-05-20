@@ -1,4 +1,4 @@
-import { loginUser, registerUser, getMe, getTickets, createTicket } from '@/lib/api'
+import { loginUser, registerUser, getMe, getTickets, createTicket, getTicketById } from '@/lib/api'
 
 function mockFetch(ok: boolean, data: unknown) {
   global.fetch = jest.fn().mockResolvedValue({
@@ -136,5 +136,30 @@ describe('createTicket', () => {
   it('lève une erreur en cas d\'échec', async () => {
     mockFetch(false, { message: 'Titre trop court' })
     await expect(createTicket('tok', { title: 'Bug', description: 'Desc', priority: 'low' })).rejects.toThrow('Titre trop court')
+  })
+})
+
+describe('getTicketById', () => {
+  afterEach(() => { (global.fetch as jest.Mock).mockReset() })
+
+  it('retourne le ticket correspondant à l\'id', async () => {
+    const ticket = {
+      id: '42', title: 'Bug critique', description: 'Détails', priority: 'urgent', status: 'open',
+      created_by: 'u1', assigned_to: null, created_at: '', updated_at: '', closed_at: null,
+      creator_name: 'Alice', creator_email: 'alice@test.com', assignee_name: null, category_name: null,
+    }
+    mockFetch(true, ticket)
+
+    const result = await getTicketById('tok', '42')
+    expect(result).toEqual(ticket)
+    expect(global.fetch).toHaveBeenCalledWith(
+      'http://localhost:5000/api/tickets/42',
+      expect.objectContaining({ headers: { Authorization: 'Bearer tok' } })
+    )
+  })
+
+  it('lève une erreur si le ticket est introuvable', async () => {
+    mockFetch(false, { message: 'Ticket introuvable' })
+    await expect(getTicketById('tok', '999')).rejects.toThrow('Ticket introuvable')
   })
 })

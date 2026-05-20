@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 px-6 dark:bg-zinc-950">
@@ -31,18 +33,18 @@ export default function Home() {
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <a
+          <Link
             href="/tickets"
             className="flex h-11 items-center justify-center rounded-lg bg-zinc-900 px-6 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             Voir les tickets
-          </a>
-          <a
+          </Link>
+          <Link
             href="/tickets/new"
             className="flex h-11 items-center justify-center rounded-lg border border-zinc-200 px-6 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:border-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-800"
           >
             Créer un ticket
-          </a>
+          </Link>
         </div>
       </main>
     </div>
