@@ -235,6 +235,22 @@ const swaggerSpec = {
         },
       },
     },
+    '/tickets/{id}/claim': {
+      post: {
+        tags: ['Tickets'],
+        summary: 'Réclamer un ticket (agent/admin)',
+        description: 'Assigne le ticket à l\'agent/admin appelant et passe le statut à in_progress.',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: {
+          200: { description: 'Ticket réclamé', content: { 'application/json': { schema: { $ref: '#/components/schemas/Ticket' } } } },
+          400: { description: 'Ticket fermé' },
+          403: { description: 'Accès réservé aux agents/admins' },
+          404: { description: 'Introuvable' },
+          409: { description: 'Ticket déjà assigné' },
+        },
+      },
+    },
     '/tickets/{id}': {
       get: {
         tags: ['Tickets'],
