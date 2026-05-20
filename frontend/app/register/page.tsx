@@ -1,4 +1,43 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { registerUser } from '@/lib/api'
+import { useAuth } from '@/context/AuthContext'
+
 export default function Register() {
+  const router = useRouter()
+  const { login } = useAuth()
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setError(null)
+
+    const form = e.currentTarget
+    const name = (form.elements.namedItem('name') as HTMLInputElement).value
+    const email = (form.elements.namedItem('email') as HTMLInputElement).value
+    const password = (form.elements.namedItem('password') as HTMLInputElement).value
+    const confirm = (form.elements.namedItem('confirmPassword') as HTMLInputElement).value
+
+    if (password !== confirm) {
+      setError('Les mots de passe ne correspondent pas')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const { token, user } = await registerUser(name, email, password)
+      login(token, user)
+      router.push('/tickets')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 px-6 dark:bg-zinc-950">
       <div className="w-full max-w-sm">
@@ -28,7 +67,7 @@ export default function Register() {
           </p>
         </div>
 
-        <form className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="name"
@@ -38,7 +77,10 @@ export default function Register() {
             </label>
             <input
               id="name"
+              name="name"
               type="text"
+              required
+              minLength={2}
               placeholder="Jean Dupont"
               className="h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-600 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
             />
@@ -53,7 +95,9 @@ export default function Register() {
             </label>
             <input
               id="email"
+              name="email"
               type="email"
+              required
               placeholder="vous@exemple.com"
               className="h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-600 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
             />
@@ -68,7 +112,10 @@ export default function Register() {
             </label>
             <input
               id="password"
+              name="password"
               type="password"
+              required
+              minLength={8}
               placeholder="••••••••"
               className="h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-600 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
             />
@@ -83,22 +130,31 @@ export default function Register() {
             </label>
             <input
               id="confirmPassword"
+              name="confirmPassword"
               type="password"
+              required
               placeholder="••••••••"
               className="h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-600 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
             />
           </div>
 
+          {error && (
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950 dark:text-red-400">
+              {error}
+            </p>
+          )}
+
           <button
             type="submit"
-            className="mt-1 h-10 rounded-lg bg-zinc-900 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            disabled={loading}
+            className="mt-1 h-10 rounded-lg bg-zinc-900 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
-            Créer mon compte
+            {loading ? 'Création…' : 'Créer mon compte'}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
-          Déjà un compte ?{" "}
+          Déjà un compte ?{' '}
           <a
             href="/login"
             className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-50"
@@ -108,5 +164,5 @@ export default function Register() {
         </p>
       </div>
     </div>
-  );
+  )
 }
