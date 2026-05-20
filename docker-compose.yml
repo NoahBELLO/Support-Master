@@ -15,12 +15,10 @@ services:
       PORT: ${BACKEND_PORT}
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
-      NODE_ENV: development
+      NODE_ENV: ${NODE_ENV:-production}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     ports:
       - "5000:5000"
-    volumes:
-      - ./backend:/usr/src/app
-      - /usr/src/app/node_modules
     networks:
       - frontend-net
       - backend-net
@@ -53,46 +51,15 @@ services:
           cpus: '1.0'
           memory: 512M
   
-  pgadmin:
-    container_name: pgadmin
-    image: dpage/pgadmin4:8
-    restart: always
-    entrypoint: /pgadmin-entrypoint.sh
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
-      PGADMIN_LISTEN_PORT: 80
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-      - ./pgadmin/entrypoint.sh:/pgadmin-entrypoint.sh:ro
-    ports:
-      - "5050:80"
-    networks:
-      - admin-net
-      - backend-net
-    depends_on:
-      - postgresql
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-
 networks:
   frontend-net:
     driver: bridge
   backend-net:
     driver: bridge
     internal: true
-  admin-net:
-    driver: bridge
   monitoring-net:
     driver: bridge
     internal: true
 
 volumes:
   postgres_data:
-  pgadmin_data:
