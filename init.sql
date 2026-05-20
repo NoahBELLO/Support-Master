@@ -65,7 +65,7 @@ INSERT INTO categories (name, description) VALUES
 -- Hash bcrypt généré pour 'Admin1234!'
 INSERT INTO users (email, password, name, role) VALUES (
     'admin@support.local',
-    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4oKsQ6K1Aq',
+    '$2a$12$m3E8VKJ1J40CzB/2t2DDMenvCJGVQT.eqimeVq6aS16QNm77bdRu2',
     'Administrateur',
     'admin'
 );
