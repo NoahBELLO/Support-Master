@@ -1,4 +1,37 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/context/AuthContext'
+import { createTicket } from '@/lib/api'
+
 export default function NewTicket() {
+  const router = useRouter()
+  const { token } = useAuth()
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!token) { router.push('/login'); return }
+    setError(null)
+    setLoading(true)
+
+    const form = e.currentTarget
+    const title = (form.elements.namedItem('title') as HTMLInputElement).value
+    const description = (form.elements.namedItem('description') as HTMLTextAreaElement).value
+    const priority = (form.elements.namedItem('priority') as HTMLSelectElement).value
+
+    try {
+      await createTicket(token, { title, description, priority })
+      router.push('/tickets')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 px-6 py-12 dark:bg-zinc-950">
       <div className="w-full max-w-lg">
@@ -30,7 +63,7 @@ export default function NewTicket() {
           </p>
         </div>
 
-        <form className="flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="title"
@@ -40,7 +73,10 @@ export default function NewTicket() {
             </label>
             <input
               id="title"
+              name="title"
               type="text"
+              required
+              minLength={5}
               placeholder="Résumez votre problème en une phrase"
               className="h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-600 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
             />
@@ -55,7 +91,10 @@ export default function NewTicket() {
             </label>
             <textarea
               id="description"
+              name="description"
               rows={5}
+              required
+              minLength={10}
               placeholder="Décrivez votre problème en détail : étapes pour reproduire, comportement attendu, comportement observé…"
               className="resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-600 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
             />
@@ -70,6 +109,8 @@ export default function NewTicket() {
             </label>
             <select
               id="priority"
+              name="priority"
+              required
               defaultValue=""
               className="h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
             >
@@ -79,10 +120,16 @@ export default function NewTicket() {
               <option value="low">Faible</option>
               <option value="medium">Moyenne</option>
               <option value="high">Haute</option>
-              <option value="critical">Critique</option>
+              <option value="urgent">Urgente</option>
             </select>
           </div>
-    
+
+          {error && (
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950 dark:text-red-400">
+              {error}
+            </p>
+          )}
+
           <div className="flex gap-3 pt-1">
             <a
               href="/tickets"
@@ -92,13 +139,14 @@ export default function NewTicket() {
             </a>
             <button
               type="submit"
-              className="flex h-10 flex-1 items-center justify-center rounded-lg bg-zinc-900 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              disabled={loading}
+              className="flex h-10 flex-1 items-center justify-center rounded-lg bg-zinc-900 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
-              Créer le ticket
+              {loading ? 'Création…' : 'Créer le ticket'}
             </button>
           </div>
         </form>
       </div>
     </div>
-  );
+  )
 }
