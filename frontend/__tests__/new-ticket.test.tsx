@@ -34,6 +34,12 @@ describe('NewTicket page', () => {
     expect(screen.getByRole('button', { name: /créer le ticket/i })).toBeInTheDocument()
   })
 
+  it("affiche la note d'assignation non modifiable", () => {
+    render(<NewTicket />)
+    expect(screen.getByText(/gérée par l.équipe support/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText(/assigné/i)).not.toBeInTheDocument()
+  })
+
   it('appelle createTicket avec les bons arguments', async () => {
     const user = userEvent.setup()
     ;(api.createTicket as jest.Mock).mockResolvedValue(mockTicket)

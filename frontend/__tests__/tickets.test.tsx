@@ -81,6 +81,8 @@ describe('Tickets page', () => {
       expect(screen.getByText('Bob Martin')).toBeInTheDocument()
       expect(screen.getByText('En cours')).toBeInTheDocument()
       expect(screen.getByText('Urgente')).toBeInTheDocument()
+
+      expect(screen.getAllByText('Non assigné')).toHaveLength(2)
     })
   })
 
@@ -100,6 +102,15 @@ describe('Tickets page', () => {
     await waitFor(() =>
       expect(screen.getByText('Aucun ticket pour le moment')).toBeInTheDocument()
     )
+  })
+
+  it("affiche l'assigné quand il existe", async () => {
+    const withAssignee = [{ ...mockTickets[0], assignee_name: 'Charlie Agent' }]
+    ;(AuthContext.useAuth as jest.Mock).mockReturnValue({ token: 'tok', user: null })
+    ;(api.getTickets as jest.Mock).mockResolvedValue(withAssignee)
+    render(<Tickets />)
+
+    await waitFor(() => expect(screen.getByText('Charlie Agent')).toBeInTheDocument())
   })
 
   it("affiche un message d'erreur si l'API échoue", async () => {
