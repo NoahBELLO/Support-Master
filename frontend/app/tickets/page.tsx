@@ -133,9 +133,12 @@ export default function Tickets() {
               className="flex flex-col gap-2 px-5 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 sm:flex-row sm:items-center sm:gap-4"
             >
               <div className="flex flex-1 flex-col gap-1 min-w-0">
-                <span className="truncate font-medium text-zinc-900 dark:text-zinc-50">
+                <Link
+                  href={`/tickets/${ticket.id}`}
+                  className="truncate font-medium text-zinc-900 hover:underline underline-offset-4 dark:text-zinc-50"
+                >
                   {ticket.title}
-                </span>
+                </Link>
                 <span className="text-xs text-zinc-400 dark:text-zinc-500">
                   Créé par{' '}
                   <span className="font-medium text-zinc-600 dark:text-zinc-300">

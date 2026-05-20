@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { createTicket } from '@/lib/api'
@@ -36,7 +37,7 @@ export default function NewTicket() {
     <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 px-6 py-12 dark:bg-zinc-950">
       <div className="w-full max-w-lg">
         <div className="mb-8 flex flex-col gap-1">
-          <a
+          <Link
             href="/tickets"
             className="mb-2 flex w-fit items-center gap-1.5 text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
           >
@@ -54,7 +55,7 @@ export default function NewTicket() {
               <path d="M19 12H5M12 5l-7 7 7 7" />
             </svg>
             Retour aux tickets
-          </a>
+          </Link>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
             Nouveau ticket
           </h1>
@@ -153,12 +154,12 @@ export default function NewTicket() {
           )}
 
           <div className="flex gap-3 pt-1">
-            <a
+            <Link
               href="/tickets"
               className="flex h-10 flex-1 items-center justify-center rounded-lg border border-zinc-200 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:border-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-800"
             >
               Annuler
-            </a>
+            </Link>
             <button
               type="submit"
               disabled={loading}

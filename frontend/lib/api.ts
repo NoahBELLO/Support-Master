@@ -79,6 +79,15 @@ export async function createTicket(
   return data
 }
 
+export async function getTicketById(token: string, id: string): Promise<Ticket> {
+  const res = await fetch(`${API_URL}/tickets/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.message ?? 'Ticket introuvable')
+  return data
+}
+
 export async function getMe(token: string): Promise<User> {
   const res = await fetch(`${API_URL}/auth/me`, {
     headers: { Authorization: `Bearer ${token}` },
