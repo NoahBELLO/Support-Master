@@ -1,6 +1,6 @@
 const AppError = require('../utils/AppError');
 
-const errorMiddleware = (err, req, res, next) => {
+const errorMiddleware = (err, req, res, _next) => {
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({ message: err.message });
   }
