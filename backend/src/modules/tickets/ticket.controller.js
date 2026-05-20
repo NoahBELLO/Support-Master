@@ -1,5 +1,11 @@
 const ticketService = require('./ticket.service');
 
+const claim = async (req, res, next) => {
+  try {
+    res.json(await ticketService.claimTicket(req.params.id, req.user));
+  } catch (err) { next(err); }
+};
+
 const create = async (req, res, next) => {
   try {
     res.status(201).json(await ticketService.createTicket(req.body, req.user));
@@ -31,4 +37,4 @@ const remove = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { create, list, getOne, update, remove };
+module.exports = { create, list, getOne, update, claim, remove };

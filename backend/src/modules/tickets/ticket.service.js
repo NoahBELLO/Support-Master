@@ -50,10 +50,18 @@ const updateTicket = async (id, data, user) => {
   return ticketRepo.update(id, fields);
 };
 
+const claimTicket = async (id, user) => {
+  const ticket = await ticketRepo.findById(id);
+  if (!ticket) throw new AppError('Ticket introuvable', 404);
+  if (ticket.assigned_to) throw new AppError('Ticket déjà assigné', 409);
+  if (ticket.status === 'closed') throw new AppError('Ticket fermé', 400);
+  return ticketRepo.update(id, { assigned_to: user.id, status: 'in_progress' });
+};
+
 const deleteTicket = async (id) => {
   const ticket = await ticketRepo.findById(id);
   if (!ticket) throw new AppError('Ticket introuvable', 404);
   await ticketRepo.remove(id);
 };
 
-module.exports = { createTicket, listTickets, getTicket, updateTicket, deleteTicket };
+module.exports = { createTicket, listTickets, getTicket, updateTicket, claimTicket, deleteTicket };
