@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { getTicketById, updateTicket, type Ticket } from '@/lib/api'
+import { getTicketById, updateTicket, getMessages, createMessage, type Ticket, type Message } from '@/lib/api'
 
 const PRIORITY_LABELS: Record<Ticket['priority'], string> = {
   low: 'Faible',
@@ -55,7 +55,15 @@ export default function TicketDetail() {
   const [error, setError] = useState<string | null>(null)
   const [statusUpdating, setStatusUpdating] = useState(false)
 
+  const [messages, setMessages] = useState<Message[]>([])
+  const [msgContent, setMsgContent] = useState('')
+  const [isInternal, setIsInternal] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [msgError, setMsgError] = useState<string | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
   const canEditStatus = user?.role === 'agent' || user?.role === 'admin'
+  const canPostInternal = user?.role === 'agent' || user?.role === 'admin'
 
   async function handleStatusChange(status: Ticket['status']) {
     if (!ticket || !token) return
@@ -70,19 +78,41 @@ export default function TicketDetail() {
     }
   }
 
+  async function handleSendMessage(e: React.FormEvent) {
+    e.preventDefault()
+    if (!token || !msgContent.trim()) return
+    setSending(true)
+    setMsgError(null)
+    try {
+      const msg = await createMessage(token, id, { content: msgContent.trim(), isInternal })
+      setMessages(prev => [...prev, msg])
+      setMsgContent('')
+      setIsInternal(false)
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+    } catch (err) {
+      setMsgError(err instanceof Error ? err.message : 'Erreur lors de l\'envoi')
+    } finally {
+      setSending(false)
+    }
+  }
+
   useEffect(() => {
     if (token === null) { router.push('/login'); return }
-    async function fetchTicket() {
+    async function fetchAll() {
       try {
-        const data = await getTicketById(token!, id)
-        setTicket(data)
+        const [ticketData, msgData] = await Promise.all([
+          getTicketById(token!, id),
+          getMessages(token!, id),
+        ])
+        setTicket(ticketData)
+        setMessages(msgData)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erreur de chargement')
       } finally {
         setLoading(false)
       }
     }
-    fetchTicket()
+    fetchAll()
   }, [token, id, router])
 
   if (loading) {
@@ -192,6 +222,106 @@ export default function TicketDetail() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Messages */}
+      <div className="mt-6 flex flex-col gap-4">
+        <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
+          Messages
+          {messages.length > 0 && (
+            <span className="ml-2 text-sm font-normal text-zinc-400">({messages.length})</span>
+          )}
+        </h2>
+
+        {messages.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-zinc-200 py-8 text-center text-sm text-zinc-400 dark:border-zinc-800">
+            Aucun message pour le moment
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`rounded-xl border p-4 ${
+                  msg.is_internal
+                    ? 'border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/20'
+                    : 'border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900'
+                }`}
+              >
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                    {msg.user_name}
+                  </span>
+                  <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                    {msg.user_role}
+                  </span>
+                  {msg.is_internal && (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                      Note interne
+                    </span>
+                  )}
+                  <span className="ml-auto text-xs text-zinc-400 dark:text-zinc-500">
+                    {new Intl.DateTimeFormat('fr-FR', {
+                      day: '2-digit', month: 'short', year: 'numeric',
+                      hour: '2-digit', minute: '2-digit',
+                    }).format(new Date(msg.created_at))}
+                  </span>
+                </div>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+                  {msg.content}
+                </p>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
+
+        {/* Reply form */}
+        {ticket.status !== 'closed' && (
+          <form onSubmit={handleSendMessage} className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+            <textarea
+              value={msgContent}
+              onChange={e => setMsgContent(e.target.value)}
+              rows={3}
+              placeholder="Écrire un message…"
+              required
+              className="resize-none rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-zinc-500"
+            />
+            {msgError && (
+              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950 dark:text-red-400">
+                {msgError}
+              </p>
+            )}
+            <div className="flex items-center justify-between gap-3">
+              {canPostInternal ? (
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                  <input
+                    type="checkbox"
+                    checked={isInternal}
+                    onChange={e => setIsInternal(e.target.checked)}
+                    className="rounded border-zinc-300 accent-amber-500 dark:border-zinc-600"
+                  />
+                  Note interne
+                </label>
+              ) : (
+                <span />
+              )}
+              <button
+                type="submit"
+                disabled={sending || !msgContent.trim()}
+                className="flex h-9 items-center gap-1.5 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              >
+                {sending ? 'Envoi…' : 'Envoyer'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {ticket.status === 'closed' && (
+          <p className="text-center text-xs text-zinc-400 dark:text-zinc-500">
+            Ce ticket est fermé — aucun nouveau message ne peut être ajouté.
+          </p>
+        )}
       </div>
     </div>
   )
