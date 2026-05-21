@@ -97,6 +97,41 @@ export async function getMe(token: string): Promise<User> {
   return data
 }
 
+export type Message = {
+  id: string
+  ticket_id: string
+  user_id: string
+  content: string
+  is_internal: boolean
+  created_at: string
+  user_name: string
+  user_role: string
+}
+
+export async function getMessages(token: string, ticketId: string): Promise<Message[]> {
+  const res = await fetch(`${API_URL}/tickets/${ticketId}/messages`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.message ?? 'Erreur lors du chargement des messages')
+  return json
+}
+
+export async function createMessage(
+  token: string,
+  ticketId: string,
+  payload: { content: string; isInternal?: boolean }
+): Promise<Message> {
+  const res = await fetch(`${API_URL}/tickets/${ticketId}/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.message ?? 'Erreur lors de l\'envoi du message')
+  return json
+}
+
 export type TicketUpdate = {
   title?: string
   description?: string
