@@ -37,10 +37,10 @@ jobs:
         run: npm test
 
       - name: Run tests unit
-        run: npm test:unit
+        run: npm run test:unit
 
       - name: Run tests integration
-        run: npm test:integration
+        run: npm run test:integration
 
       - name: Run tests playwright
-        run: npm test:e2e
+        run: npm run test:e2e
