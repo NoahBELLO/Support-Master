@@ -97,6 +97,36 @@ export async function getMe(token: string): Promise<User> {
   return data
 }
 
+export type TicketUpdate = {
+  title?: string
+  description?: string
+  status?: Ticket['status']
+  priority?: Ticket['priority']
+  assignedTo?: string | null
+  categoryId?: number | null
+}
+
+export async function updateTicket(token: string, id: string, payload: TicketUpdate): Promise<Ticket> {
+  const res = await fetch(`${API_URL}/tickets/${id}`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.message ?? 'Erreur lors de la mise à jour')
+  return json
+}
+
+export async function claimTicket(token: string, id: string): Promise<Ticket> {
+  const res = await fetch(`${API_URL}/tickets/${id}/claim`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.message ?? 'Erreur lors de la prise en charge')
+  return json
+}
+
 export async function getUsers(token: string): Promise<User[]> {
   const res = await fetch(`${API_URL}/users`, {
     headers: { Authorization: `Bearer ${token}` },

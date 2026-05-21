@@ -52,6 +52,14 @@ export default function Header() {
             >
               Tickets
             </Link>
+            {(user.role === 'agent' || user.role === 'admin') && (
+              <Link
+                href="/support"
+                className="rounded-md px-3 py-1.5 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+              >
+                Support
+              </Link>
+            )}
             {user.role === 'admin' && (
               <>
                 <Link
