@@ -72,10 +72,11 @@ const update = async (id, fields) => {
   params.push(id);
 
   const { rows } = await pool.query(
-    `UPDATE tickets SET ${updates.join(', ')} WHERE id = $${params.length} RETURNING *`,
+    `UPDATE tickets SET ${updates.join(', ')} WHERE id = $${params.length} RETURNING id`,
     params
   );
-  return rows[0] || null;
+  if (!rows[0]) return null;
+  return findById(rows[0].id);
 };
 
 const remove = async (id) => {
