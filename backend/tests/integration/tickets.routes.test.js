@@ -163,5 +163,164 @@ describe('Tickets Routes', () => {
 
       expect(res.status).toBe(403);
     });
+
+    it('500 — erreur inattendue (couvre le catch du controller remove)', async () => {
+      ticketRepo.findById.mockResolvedValue({ id: 'ticket-1' });
+      ticketRepo.remove.mockRejectedValue(new Error('DB error'));
+
+      const res = await request(app)
+        .delete('/api/tickets/ticket-1')
+        .set('Authorization', `Bearer ${mockAuth('admin')}`);
+
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe('POST /api/tickets/:id/claim', () => {
+    it('200 — agent prend en charge un ticket non assigné', async () => {
+      ticketRepo.findById.mockResolvedValue({ id: 'ticket-1', assigned_to: null, status: 'open' });
+      ticketRepo.update.mockResolvedValue({ id: 'ticket-1', assigned_to: 'user-id', status: 'in_progress' });
+
+      const res = await request(app)
+        .post('/api/tickets/ticket-1/claim')
+        .set('Authorization', `Bearer ${mockAuth('agent')}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.assigned_to).toBe('user-id');
+    });
+
+    it('404 — ticket introuvable', async () => {
+      ticketRepo.findById.mockResolvedValue(null);
+
+      const res = await request(app)
+        .post('/api/tickets/ticket-1/claim')
+        .set('Authorization', `Bearer ${mockAuth('agent')}`);
+
+      expect(res.status).toBe(404);
+    });
+
+    it('409 — ticket déjà assigné', async () => {
+      ticketRepo.findById.mockResolvedValue({ id: 'ticket-1', assigned_to: 'other-agent', status: 'in_progress' });
+
+      const res = await request(app)
+        .post('/api/tickets/ticket-1/claim')
+        .set('Authorization', `Bearer ${mockAuth('agent')}`);
+
+      expect(res.status).toBe(409);
+    });
+
+    it('400 — ticket fermé', async () => {
+      ticketRepo.findById.mockResolvedValue({ id: 'ticket-1', assigned_to: null, status: 'closed' });
+
+      const res = await request(app)
+        .post('/api/tickets/ticket-1/claim')
+        .set('Authorization', `Bearer ${mockAuth('agent')}`);
+
+      expect(res.status).toBe(400);
+    });
+
+    it('403 — client ne peut pas prendre en charge', async () => {
+      const res = await request(app)
+        .post('/api/tickets/ticket-1/claim')
+        .set('Authorization', `Bearer ${mockAuth('client')}`);
+
+      expect(res.status).toBe(403);
+    });
+  });
+
+  describe('PUT /api/tickets/:id — chemins client', () => {
+    it('403 — client tente de modifier le ticket d\'un autre', async () => {
+      ticketRepo.findById.mockResolvedValue({ id: 'ticket-1', created_by: 'other-id', status: 'open' });
+
+      const res = await request(app)
+        .put('/api/tickets/ticket-1')
+        .set('Authorization', `Bearer ${mockAuth('client', 'user-id')}`)
+        .send({ title: 'Nouveau titre valide' });
+
+      expect(res.status).toBe(403);
+    });
+
+    it('400 — client tente de modifier un ticket non ouvert', async () => {
+      ticketRepo.findById.mockResolvedValue({ id: 'ticket-1', created_by: 'user-id', status: 'in_progress' });
+
+      const res = await request(app)
+        .put('/api/tickets/ticket-1')
+        .set('Authorization', `Bearer ${mockAuth('client', 'user-id')}`)
+        .send({ title: 'Nouveau titre valide' });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('200 — client modifie son propre ticket ouvert', async () => {
+      ticketRepo.findById.mockResolvedValue({ id: 'ticket-1', created_by: 'user-id', status: 'open' });
+      ticketRepo.update.mockResolvedValue({ id: 'ticket-1', title: 'Nouveau titre valide', status: 'open' });
+
+      const res = await request(app)
+        .put('/api/tickets/ticket-1')
+        .set('Authorization', `Bearer ${mockAuth('client', 'user-id')}`)
+        .send({ title: 'Nouveau titre valide' });
+
+      expect(res.status).toBe(200);
+    });
+
+    it('200 — agent change le statut en closed (définit closed_at)', async () => {
+      ticketRepo.findById.mockResolvedValue({ id: 'ticket-1', created_by: 'c-id', status: 'open' });
+      ticketRepo.update.mockResolvedValue({ id: 'ticket-1', status: 'closed', closed_at: new Date().toISOString() });
+
+      const res = await request(app)
+        .put('/api/tickets/ticket-1')
+        .set('Authorization', `Bearer ${mockAuth('agent')}`)
+        .send({ status: 'closed' });
+
+      expect(res.status).toBe(200);
+      expect(ticketRepo.update).toHaveBeenCalledWith('ticket-1', expect.objectContaining({ closed_at: expect.any(String) }));
+    });
+
+    it('200 — agent change le statut en resolved (définit closed_at)', async () => {
+      ticketRepo.findById.mockResolvedValue({ id: 'ticket-1', created_by: 'c-id', status: 'open' });
+      ticketRepo.update.mockResolvedValue({ id: 'ticket-1', status: 'resolved', closed_at: new Date().toISOString() });
+
+      const res = await request(app)
+        .put('/api/tickets/ticket-1')
+        .set('Authorization', `Bearer ${mockAuth('agent')}`)
+        .send({ status: 'resolved' });
+
+      expect(res.status).toBe(200);
+      expect(ticketRepo.update).toHaveBeenCalledWith('ticket-1', expect.objectContaining({ closed_at: expect.any(String) }));
+    });
+
+    it('500 — erreur inattendue (couvre le catch du controller update)', async () => {
+      ticketRepo.findById.mockRejectedValue(new Error('DB crash'));
+
+      const res = await request(app)
+        .put('/api/tickets/ticket-1')
+        .set('Authorization', `Bearer ${mockAuth('agent')}`)
+        .send({ status: 'in_progress' });
+
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe('Erreurs inattendues — controller create et list', () => {
+    it('500 — erreur inattendue lors de la création (couvre le catch du controller create)', async () => {
+      ticketRepo.create.mockRejectedValue(new Error('DB crash'));
+
+      const res = await request(app)
+        .post('/api/tickets')
+        .set('Authorization', `Bearer ${mockAuth('client')}`)
+        .send({ title: 'Titre valide', description: 'Description suffisante', priority: 'low' });
+
+      expect(res.status).toBe(500);
+    });
+
+    it('500 — erreur inattendue lors du listing (couvre le catch du controller list)', async () => {
+      ticketRepo.findAll.mockRejectedValue(new Error('DB crash'));
+
+      const res = await request(app)
+        .get('/api/tickets')
+        .set('Authorization', `Bearer ${mockAuth('admin')}`);
+
+      expect(res.status).toBe(500);
+    });
   });
 });
