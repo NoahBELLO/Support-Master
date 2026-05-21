@@ -67,7 +67,7 @@ export async function getTickets(token: string): Promise<Ticket[]> {
 
 export async function createTicket(
   token: string,
-  payload: { title: string; description: string; priority: string }
+  payload: { title: string; description: string; priority: string; categoryId?: number }
 ): Promise<Ticket> {
   const res = await fetch(`${API_URL}/tickets`, {
     method: 'POST',

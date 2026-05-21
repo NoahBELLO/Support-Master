@@ -1,16 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { createTicket } from '@/lib/api'
+import { createTicket, getCategories, type Category } from '@/lib/api'
 
 export default function NewTicket() {
   const router = useRouter()
   const { token } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
+
+  useEffect(() => {
+    if (!token) return
+    getCategories(token).then(setCategories).catch(() => {})
+  }, [token])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -22,9 +28,14 @@ export default function NewTicket() {
     const title = (form.elements.namedItem('title') as HTMLInputElement).value
     const description = (form.elements.namedItem('description') as HTMLTextAreaElement).value
     const priority = (form.elements.namedItem('priority') as HTMLSelectElement).value
+    const categoryRaw = (form.elements.namedItem('categoryId') as HTMLSelectElement | null)?.value
+    const categoryId = categoryRaw ? Number(categoryRaw) : undefined
 
     try {
-      await createTicket(token, { title, description, priority })
+      await createTicket(token, {
+        title, description, priority,
+        ...(categoryId !== undefined ? { categoryId } : {}),
+      })
       router.push('/tickets')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue')
@@ -124,6 +135,28 @@ export default function NewTicket() {
               <option value="urgent">Urgente</option>
             </select>
           </div>
+
+          {categories.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="categoryId"
+                className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              >
+                Catégorie
+              </label>
+              <select
+                id="categoryId"
+                name="categoryId"
+                defaultValue=""
+                className="h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
+              >
+                <option value="">Sans catégorie</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="flex items-start gap-2.5 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">
             <svg
