@@ -5,6 +5,8 @@ const rateLimit = require('express-rate-limit');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 const errorMiddleware = require('./middlewares/error.middleware');
+const morgan = require('morgan');
+const { register, metricsMiddleware } = require('./config/metrics');
 
 const authRoutes = require('./modules/auth/auth.routes');
 const userRoutes = require('./modules/users/user.routes');
@@ -20,6 +22,8 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+app.use(morgan('combined'));
+app.use(metricsMiddleware);
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -30,6 +34,10 @@ const authLimiter = rateLimit({
 });
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType)
+  res.end(await register.metrics())
+});
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/api/auth', authLimiter, authRoutes);
