@@ -36,12 +36,41 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-zinc-200 bg-white px-6 dark:border-zinc-800 dark:bg-zinc-950">
-      <Link
-        href="/"
-        className="text-sm font-semibold text-zinc-900 hover:text-zinc-600 dark:text-zinc-50 dark:hover:text-zinc-300"
-      >
-        Support Master
-      </Link>
+      <div className="flex items-center gap-6">
+        <Link
+          href="/"
+          className="text-sm font-semibold text-zinc-900 hover:text-zinc-600 dark:text-zinc-50 dark:hover:text-zinc-300"
+        >
+          Support Master
+        </Link>
+
+        {user && (
+          <nav className="flex items-center gap-1">
+            <Link
+              href="/tickets"
+              className="rounded-md px-3 py-1.5 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+            >
+              Tickets
+            </Link>
+            {user.role === 'admin' && (
+              <>
+                <Link
+                  href="/admin/users"
+                  className="rounded-md px-3 py-1.5 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                >
+                  Utilisateurs
+                </Link>
+                <Link
+                  href="/admin/categories"
+                  className="rounded-md px-3 py-1.5 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                >
+                  Catégories
+                </Link>
+              </>
+            )}
+          </nav>
+        )}
+      </div>
 
       <div ref={dropdownRef} className="relative">
         {user ? (
