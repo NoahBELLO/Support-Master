@@ -129,5 +129,16 @@ describe('Auth Routes', () => {
       expect(res.status).toBe(200);
       expect(res.body.email).toBe('test@test.com');
     });
+
+    it('404 — utilisateur introuvable', async () => {
+      jwt.verify.mockReturnValue({ id: 'uuid-1', role: 'client' });
+      userRepo.findById.mockResolvedValue(null);
+
+      const res = await request(app)
+        .get('/api/auth/me')
+        .set('Authorization', 'Bearer valid_token');
+
+      expect(res.status).toBe(404);
+    });
   });
 });

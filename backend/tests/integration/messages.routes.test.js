@@ -84,9 +84,42 @@ describe('Messages Routes', () => {
       expect(res.body).toHaveLength(2);
     });
 
+    it('403 — client accède aux messages d\'un autre ticket', async () => {
+      ticketRepo.findById.mockResolvedValue({ id: 'ticket-1', created_by: 'other-id', status: 'open' });
+
+      const res = await request(app)
+        .get('/api/tickets/ticket-1/messages')
+        .set('Authorization', `Bearer ${mockAuth('client')}`);
+
+      expect(res.status).toBe(403);
+    });
+
+    it('500 — erreur inattendue (couvre le catch du controller list)', async () => {
+      ticketRepo.findById.mockRejectedValue(new Error('DB crash'));
+
+      const res = await request(app)
+        .get('/api/tickets/ticket-1/messages')
+        .set('Authorization', `Bearer ${mockAuth('agent')}`);
+
+      expect(res.status).toBe(500);
+    });
+
     it('401 — sans token', async () => {
       const res = await request(app).get('/api/tickets/ticket-1/messages');
       expect(res.status).toBe(401);
+    });
+  });
+
+  describe('Erreurs inattendues — controller create', () => {
+    it('500 — erreur inattendue (couvre le catch du controller create)', async () => {
+      ticketRepo.findById.mockRejectedValue(new Error('DB crash'));
+
+      const res = await request(app)
+        .post('/api/tickets/ticket-1/messages')
+        .set('Authorization', `Bearer ${mockAuth('agent')}`)
+        .send({ content: 'Test message content' });
+
+      expect(res.status).toBe(500);
     });
   });
 });
