@@ -35,3 +35,12 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      - name: Run tests unit
+        run: npm test:unit
+
+      - name: Run tests integration
+        run: npm test:integration
+
+      - name: Run tests playwright
+        run: npm test:e2e
