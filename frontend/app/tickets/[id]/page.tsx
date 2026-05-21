@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { getTicketById, updateTicket, getMessages, createMessage, type Ticket, type Message } from '@/lib/api'
+import { getTicketById, updateTicket, getMessages, createMessage, getCategories, type Ticket, type Message, type Category } from '@/lib/api'
 
 const PRIORITY_LABELS: Record<Ticket['priority'], string> = {
   low: 'Faible',
@@ -55,6 +55,9 @@ export default function TicketDetail() {
   const [error, setError] = useState<string | null>(null)
   const [statusUpdating, setStatusUpdating] = useState(false)
 
+  const [categories, setCategories] = useState<Category[]>([])
+  const [categoryUpdating, setCategoryUpdating] = useState(false)
+
   const [messages, setMessages] = useState<Message[]>([])
   const [msgContent, setMsgContent] = useState('')
   const [isInternal, setIsInternal] = useState(false)
@@ -75,6 +78,19 @@ export default function TicketDetail() {
       setError(err instanceof Error ? err.message : 'Erreur lors de la mise à jour')
     } finally {
       setStatusUpdating(false)
+    }
+  }
+
+  async function handleCategoryChange(categoryId: number | null) {
+    if (!ticket || !token) return
+    setCategoryUpdating(true)
+    try {
+      const updated = await updateTicket(token, id, { categoryId })
+      setTicket(updated)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la mise à jour')
+    } finally {
+      setCategoryUpdating(false)
     }
   }
 
@@ -100,12 +116,14 @@ export default function TicketDetail() {
     if (token === null) { router.push('/login'); return }
     async function fetchAll() {
       try {
-        const [ticketData, msgData] = await Promise.all([
+        const [ticketData, msgData, catData] = await Promise.all([
           getTicketById(token!, id),
           getMessages(token!, id),
+          getCategories(token!),
         ])
         setTicket(ticketData)
         setMessages(msgData)
+        setCategories(catData)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erreur de chargement')
       } finally {
@@ -208,12 +226,29 @@ export default function TicketDetail() {
             <span className="text-sm text-zinc-600 dark:text-zinc-300">{formatDate(ticket.updated_at)}</span>
           </div>
 
-          {ticket.category_name && (
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium uppercase tracking-wide text-zinc-400">Catégorie</span>
-              <span className="text-sm text-zinc-600 dark:text-zinc-300">{ticket.category_name}</span>
-            </div>
-          )}
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-medium uppercase tracking-wide text-zinc-400">Catégorie</span>
+            {canEditStatus && categories.length > 0 ? (
+              <select
+                value={ticket.category_name
+                  ? (categories.find(c => c.name === ticket.category_name)?.id ?? '')
+                  : ''}
+                disabled={categoryUpdating}
+                onChange={e => handleCategoryChange(e.target.value ? Number(e.target.value) : null)}
+                aria-label="Modifier la catégorie"
+                className="h-8 w-full rounded-md border border-zinc-200 bg-white px-2 text-sm text-zinc-700 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+              >
+                <option value="">Sans catégorie</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            ) : (
+              <span className="text-sm text-zinc-600 dark:text-zinc-300">
+                {ticket.category_name ?? '—'}
+              </span>
+            )}
+          </div>
 
           {ticket.closed_at && (
             <div className="flex flex-col gap-1">

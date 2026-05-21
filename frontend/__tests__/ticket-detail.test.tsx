@@ -4,7 +4,7 @@ import * as api from '@/lib/api'
 import * as AuthContext from '@/context/AuthContext'
 import { useRouter, useParams } from 'next/navigation'
 
-jest.mock('@/lib/api', () => ({ getTicketById: jest.fn(), getMessages: jest.fn() }))
+jest.mock('@/lib/api', () => ({ getTicketById: jest.fn(), getMessages: jest.fn(), getCategories: jest.fn() }))
 jest.mock('@/context/AuthContext', () => ({ useAuth: jest.fn() }))
 jest.mock('next/navigation', () => ({ useRouter: jest.fn(), useParams: jest.fn() }))
 
@@ -34,6 +34,7 @@ describe('TicketDetail page', () => {
     ;(useParams as jest.Mock).mockReturnValue({ id: '42' })
     ;(AuthContext.useAuth as jest.Mock).mockReturnValue({ token: 'tok', user: null })
     ;(api.getMessages as jest.Mock).mockResolvedValue([])
+    ;(api.getCategories as jest.Mock).mockResolvedValue([])
   })
 
   it('affiche le titre et les badges du ticket', async () => {

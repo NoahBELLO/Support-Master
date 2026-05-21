@@ -4,7 +4,7 @@ const createSchema = Joi.object({
   title: Joi.string().min(5).max(255).required(),
   description: Joi.string().min(10).required(),
   priority: Joi.string().valid('low', 'medium', 'high', 'urgent').default('medium'),
-  categoryId: Joi.string().uuid().optional(),
+  categoryId: Joi.number().integer().positive().optional(),
 });
 
 const updateSchema = Joi.object({
@@ -12,7 +12,7 @@ const updateSchema = Joi.object({
   description: Joi.string().min(10),
   status: Joi.string().valid('open', 'in_progress', 'resolved', 'closed'),
   priority: Joi.string().valid('low', 'medium', 'high', 'urgent'),
-  categoryId: Joi.string().uuid().allow(null),
+  categoryId: Joi.number().integer().positive().allow(null),
   assignedTo: Joi.string().uuid().allow(null),
 }).min(1);
 

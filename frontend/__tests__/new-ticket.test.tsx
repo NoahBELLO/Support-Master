@@ -5,7 +5,7 @@ import * as api from '@/lib/api'
 import * as AuthContext from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
 
-jest.mock('@/lib/api', () => ({ createTicket: jest.fn() }))
+jest.mock('@/lib/api', () => ({ createTicket: jest.fn(), getCategories: jest.fn() }))
 jest.mock('@/context/AuthContext', () => ({ useAuth: jest.fn() }))
 jest.mock('next/navigation', () => ({ useRouter: jest.fn() }))
 
@@ -23,6 +23,7 @@ describe('NewTicket page', () => {
     jest.clearAllMocks()
     ;(useRouter as jest.Mock).mockReturnValue({ push: mockPush })
     ;(AuthContext.useAuth as jest.Mock).mockReturnValue({ token: 'tok', user: null })
+    ;(api.getCategories as jest.Mock).mockResolvedValue([])
   })
 
   it('affiche le titre et les champs du formulaire', () => {
