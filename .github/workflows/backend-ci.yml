@@ -16,6 +16,27 @@ jobs:
       run:
         working-directory: backend
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: support_master_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/support_master_test
+      JWT_SECRET: test_secret_32_chars_minimum_ok_x
+      NODE_ENV: test
+      FRONTEND_URL: http://localhost:3000
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,11 +51,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Init database schema
+        run: psql $DATABASE_URL -f ../init.sql
+
       - name: Lint
         run: npm run lint
-
-      - name: Run tests
-        run: npm test
 
       - name: Run tests unit
         run: npm run test:unit
@@ -42,5 +63,8 @@ jobs:
       - name: Run tests integration
         run: npm run test:integration
 
-      - name: Run tests playwright
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
         run: npm run test:e2e
