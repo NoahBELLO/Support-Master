@@ -7,8 +7,8 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "jest --coverage --forceExit",
-    "test:unit": "jest tests/unit --coverage --forceExit",
-    "test:integration": "jest tests/integration --coverage --forceExit",
+    "test:unit": "jest tests/unit --config jest.unit.config.js --coverage --forceExit",
+    "test:integration": "jest tests/integration --config jest.integration.config.js --coverage --forceExit",
     "test:e2e": "playwright test",
     "lint": "eslint src tests --ext .js"
   },

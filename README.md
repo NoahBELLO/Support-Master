@@ -129,6 +129,56 @@ src/modules/<module>/
 
 ## 3. Modèle de données
 
+> Le fichier complet avec la représentation Merise est disponible dans [`docs/mcd.md`](./docs/mcd.md).
+
+### Diagramme MCD
+
+```mermaid
+erDiagram
+    UTILISATEUR {
+        UUID id PK
+        VARCHAR email
+        VARCHAR password
+        VARCHAR name
+        ENUM role
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+    TICKET {
+        UUID id PK
+        VARCHAR title
+        TEXT description
+        ENUM status
+        ENUM priority
+        INT category_id FK
+        UUID created_by FK
+        UUID assigned_to FK
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+        TIMESTAMP closed_at
+    }
+    MESSAGE {
+        UUID id PK
+        UUID ticket_id FK
+        UUID user_id FK
+        TEXT content
+        BOOLEAN is_internal
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+    CATEGORIE {
+        SERIAL id PK
+        VARCHAR name
+        VARCHAR description
+    }
+
+    UTILISATEUR ||--o{ TICKET : "soumet"
+    UTILISATEUR |o--o{ TICKET : "est assigné à"
+    UTILISATEUR ||--o{ MESSAGE : "rédige"
+    TICKET ||--o{ MESSAGE : "contient"
+    CATEGORIE |o--o{ TICKET : "catégorise"
+```
+
 ### Diagramme MLD
 
 ```
@@ -411,25 +461,28 @@ Couverture:  ≥ 70 % (lignes/fonctions), ≥ 60 % (branches)
 
 ### Pipeline GitHub Actions
 
-Le pipeline se déclenche automatiquement à chaque **pull request vers `main`**.
+Les pipelines se déclenchent automatiquement à chaque **pull request vers `main`**, en ne s'exécutant que si les fichiers du dossier concerné ont été modifiés.
 
 ```
-┌─────────────────────────────────────────────┐
-│           GitHub Actions                    │
-├─────────────────────────────────────────────┤
-│  On: pull_request → main                    │
-│                                             │
-│  frontend-tests:                            │
-│    ├── Checkout                             │
-│    ├── Setup Node.js 20                     │
-│    ├── npm ci                               │
-│    ├── npm run lint                         │
-│    ├── npm test                             │
-│    └── npm run build                        │
-└─────────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐  ┌─────────────────────────────────────────┐
+│         backend-ci.yml                       │  │         frontend-ci.yml                 │
+├──────────────────────────────────────────────┤  ├─────────────────────────────────────────┤
+│  On: pull_request → main                     │  │  On: pull_request → main                │
+│  Paths: backend/**                           │  │  Paths: frontend/**                     │
+│                                              │  │                                         │
+│  backend-tests:                              │  │  frontend-tests:                        │
+│    ├── Checkout                              │  │    ├── Checkout                         │
+│    ├── Setup Node.js 20                      │  │    ├── Setup Node.js 20                 │
+│    ├── npm ci                                │  │    ├── npm ci                           │
+│    ├── npm run lint                          │  │    ├── npm run lint                     │
+│    ├── npm test                              │  │    ├── npm test                         │
+│    ├── npm run test:unit                     │  │    └── npm run build                    │
+│    ├── npm run test:integration              │  └─────────────────────────────────────────┘
+│    └── npm run test:e2e (Playwright)         │
+└──────────────────────────────────────────────┘
 ```
 
-Fichier de configuration : `.github/workflows/frontend-ci.yml`
+Fichiers de configuration : `.github/workflows/backend-ci.yml` et `.github/workflows/frontend-ci.yml`
 
 ---
 
@@ -455,6 +508,7 @@ Configurer les variables d'environnement directement dans les interfaces Vercel 
 
 ## 10. Documentation complémentaire
 
+- [Modèle Conceptuel de Données (MCD)](./docs/mcd.md)
 - [User Stories et Critères d'acceptation](./docs/user-stories.md)
 - [Scénarios BDD (Gherkin)](./docs/bdd-scenarios.md)
 - [Documentation API interactive](http://localhost:5000/api/docs) *(en local)*
