@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { getTicketById, type Ticket } from '@/lib/api'
+import { getTicketById, updateTicket, type Ticket } from '@/lib/api'
 
 const PRIORITY_LABELS: Record<Ticket['priority'], string> = {
   low: 'Faible',
@@ -45,7 +45,7 @@ function formatDate(dateStr: string) {
 }
 
 export default function TicketDetail() {
-  const { token } = useAuth()
+  const { token, user } = useAuth()
   const router = useRouter()
   const params = useParams()
   const id = params.id as string
@@ -53,6 +53,22 @@ export default function TicketDetail() {
   const [ticket, setTicket] = useState<Ticket | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [statusUpdating, setStatusUpdating] = useState(false)
+
+  const canEditStatus = user?.role === 'agent' || user?.role === 'admin'
+
+  async function handleStatusChange(status: Ticket['status']) {
+    if (!ticket || !token) return
+    setStatusUpdating(true)
+    try {
+      const updated = await updateTicket(token, id, { status })
+      setTicket(updated)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la mise à jour')
+    } finally {
+      setStatusUpdating(false)
+    }
+  }
 
   useEffect(() => {
     if (token === null) { router.push('/login'); return }
@@ -108,9 +124,23 @@ export default function TicketDetail() {
       <div className="flex flex-col gap-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[ticket.status]}`}>
-              {STATUS_LABELS[ticket.status]}
-            </span>
+            {canEditStatus ? (
+              <select
+                value={ticket.status}
+                disabled={statusUpdating}
+                onChange={e => handleStatusChange(e.target.value as Ticket['status'])}
+                aria-label="Modifier le statut"
+                className="rounded-full border border-zinc-200 bg-white px-2.5 py-0.5 text-xs font-medium text-zinc-700 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+              >
+                {(Object.entries(STATUS_LABELS) as [Ticket['status'], string][]).map(([s, label]) => (
+                  <option key={s} value={s}>{label}</option>
+                ))}
+              </select>
+            ) : (
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[ticket.status]}`}>
+                {STATUS_LABELS[ticket.status]}
+              </span>
+            )}
             <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${PRIORITY_STYLES[ticket.priority]}`}>
               {PRIORITY_LABELS[ticket.priority]}
             </span>
