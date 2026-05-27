@@ -1,5 +1,8 @@
 import { loginUser, registerUser, getMe, getTickets, createTicket, getTicketById } from '@/lib/api'
 
+// Miroir exact de la logique dans lib/api.ts — s'adapte à l'env (CI ou local)
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api'
+
 function mockFetch(ok: boolean, data: unknown) {
   global.fetch = jest.fn().mockResolvedValue({
     ok,
@@ -20,7 +23,7 @@ describe('loginUser', () => {
     const result = await loginUser('a@b.com', 'pass')
     expect(result).toEqual(payload)
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:5000/api/auth/login',
+      `${API_URL}/auth/login`,
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({ email: 'a@b.com', password: 'pass' }),
@@ -52,7 +55,7 @@ describe('registerUser', () => {
     const result = await registerUser('B', 'b@c.com', 'password123')
     expect(result).toEqual(payload)
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:5000/api/auth/register',
+      `${API_URL}/auth/register`,
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({ name: 'B', email: 'b@c.com', password: 'password123' }),
@@ -78,7 +81,7 @@ describe('getMe', () => {
     const result = await getMe('valid-token')
     expect(result).toEqual(user)
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:5000/api/auth/me',
+      `${API_URL}/auth/me`,
       expect.objectContaining({
         headers: { Authorization: 'Bearer valid-token' },
       })
@@ -103,7 +106,7 @@ describe('getTickets', () => {
     const result = await getTickets('tok')
     expect(result).toEqual(tickets)
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:5000/api/tickets',
+      `${API_URL}/tickets`,
       expect.objectContaining({ headers: { Authorization: 'Bearer tok' } })
     )
   })
@@ -124,7 +127,7 @@ describe('createTicket', () => {
     const result = await createTicket('tok', { title: 'Bug', description: 'Desc', priority: 'medium' })
     expect(result).toEqual(ticket)
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:5000/api/tickets',
+      `${API_URL}/tickets`,
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({ title: 'Bug', description: 'Desc', priority: 'medium' }),
@@ -153,7 +156,7 @@ describe('getTicketById', () => {
     const result = await getTicketById('tok', '42')
     expect(result).toEqual(ticket)
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:5000/api/tickets/42',
+      `${API_URL}/tickets/42`,
       expect.objectContaining({ headers: { Authorization: 'Bearer tok' } })
     )
   })
