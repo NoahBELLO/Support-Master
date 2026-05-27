@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  android-builder:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ../frontend:/workspace/frontend
+      - ../generated:/workspace/generated
+      - android-npm-cache:/root/.npm
+      - android-gradle-cache:/root/.gradle
+    environment:
+      - APP_NAME=${APP_NAME:-SupportMaster}
+      - APP_ID=${APP_ID:-com.keyce.supportmaster}
+    profiles: []
+
+volumes:
+  android-npm-cache:
+  android-gradle-cache:
