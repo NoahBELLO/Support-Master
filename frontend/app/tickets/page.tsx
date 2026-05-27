@@ -134,7 +134,7 @@ export default function Tickets() {
             >
               <div className="flex flex-1 flex-col gap-1 min-w-0">
                 <Link
-                  href={`/tickets/${ticket.id}`}
+                  href={`/tickets/detail?id=${ticket.id}`}
                   className="truncate font-medium text-zinc-900 hover:underline underline-offset-4 dark:text-zinc-50"
                 >
                   {ticket.title}
