@@ -16,21 +16,29 @@ const categoryRoutes = require("./modules/categories/category.routes");
 
 const app = express();
 
+// Origines autorisées : frontend web + app mobile Capacitor
 const allowedOrigins = [
   process.env.FRONTEND_URL || "http://localhost:3000",
-  "https://support-master.vercel.app",
+  "https://support-master.vercel.app", 
   "https://localhost",
-  "capacitor://localhost",
-  "http://localhost",
+  "capacitor://localhost", 
+  "http://localhost", 
 ];
 
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS bloqué pour l'origine : ${origin}`));
+      }
+    },
     credentials: true,
   }),
 );
+
 app.use(express.json());
 app.use(morgan("combined"));
 app.use(metricsMiddleware);
