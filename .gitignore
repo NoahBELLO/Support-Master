@@ -4,10 +4,16 @@ node_modules/
 coverage/
 test-results/
 playwright-report/
-scripts/
+
+# Mobile build outputs
 generated/
-docker/
-.github/workflows/build-android.yml
-frontend/capacitor.config.json
-frontend/app/tickets/\[id]/TicketDetail.tsx
+frontend/out/
 frontend/android/
+frontend/.next/
+
+# Android Studio
+*.iml
+.gradle/
+local.properties
+.idea/
+*.keystore

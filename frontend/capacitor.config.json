@@ -1,0 +1,8 @@
+{
+  "appId": "com.keyce.supportmaster",
+  "appName": "SupportMaster",
+  "webDir": "out",
+  "server": {
+    "androidScheme": "https"
+  }
+}
