@@ -1,7 +1,4 @@
-import { loginUser, registerUser, getMe, getTickets, createTicket, getTicketById } from '@/lib/api'
-
-// Miroir exact de la logique dans lib/api.ts — s'adapte à l'env (CI ou local)
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api'
+import { loginUser, registerUser, getMe, getTickets, createTicket, getTicketById, API_URL } from '@/lib/api'
 
 function mockFetch(ok: boolean, data: unknown) {
   global.fetch = jest.fn().mockResolvedValue({
