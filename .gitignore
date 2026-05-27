@@ -4,3 +4,10 @@ node_modules/
 coverage/
 test-results/
 playwright-report/
+scripts/
+generated/
+docker/
+.github/workflows/build-android.yml
+frontend/capacitor.config.json
+frontend/app/tickets/\[id]/TicketDetail.tsx
+frontend/android/
