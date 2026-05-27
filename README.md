@@ -14,8 +14,9 @@ Application fullstack de gestion de tickets d'assistance client, développée da
 6. [API REST — Endpoints](#6-api-rest--endpoints)
 7. [Stratégie de tests](#7-stratégie-de-tests)
 8. [CI/CD](#8-cicd)
-9. [Déploiement](#9-déploiement)
-10. [Documentation complémentaire](#10-documentation-complémentaire)
+9. [Application mobile Android](#9-application-mobile-android)
+10. [Déploiement](#10-déploiement)
+11. [Documentation complémentaire](#11-documentation-complémentaire)
 
 ---
 
@@ -108,6 +109,7 @@ Support Master est une plateforme web permettant aux entreprises de gérer les d
 | Validation | Joi |
 | Documentation API | Swagger UI / OpenAPI 3.0 |
 | Tests | Jest, Supertest, Playwright |
+| Mobile | Capacitor 8 (Android APK) |
 | Conteneurisation | Docker, Docker Compose |
 | CI/CD | GitHub Actions |
 | Déploiement | Vercel (frontend), Render (backend) |
@@ -486,7 +488,47 @@ Fichiers de configuration : `.github/workflows/backend-ci.yml` et `.github/workf
 
 ---
 
-## 9. Déploiement
+## 9. Application mobile Android
+
+L'application web est convertie en APK Android natif via **Capacitor 8**. Deux approches sont disponibles : un build local avec Docker ou un build automatisé via GitHub Actions.
+
+> Documentation complète : **[docs/mobile.md](./docs/mobile.md)**
+
+### Partie A — Build local (Docker)
+
+Prérequis : Docker Desktop installé et démarré.
+
+```bash
+./scripts/build-android.sh
+```
+
+L'APK est généré dans `generated/builds/apk/app-debug.apk`.
+
+### Partie B — Build automatisé (GitHub Actions)
+
+Le workflow se déclenche **uniquement sur un tag Git** de la forme `v*` :
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+→ L'APK est disponible dans l'onglet **Actions → Artifacts** du dépôt GitHub pendant 30 jours.
+
+**Versionning automatique** : le `versionName` de l'APK correspond au tag (ex: `v1.2.0` → `"1.2.0"`), le `versionCode` au numéro de build GitHub (`github.run_number`).
+
+### Configuration Capacitor
+
+| Paramètre | Valeur |
+|---|---|
+| `appId` | `com.keyce.supportmaster` |
+| `appName` | `SupportMaster` |
+| `webDir` | `out` (export statique Next.js) |
+| Android SDK | 34 |
+
+---
+
+## 10. Déploiement
 
 ### Frontend — Vercel
 
@@ -506,11 +548,12 @@ Configurer les variables d'environnement directement dans les interfaces Vercel 
 
 ---
 
-## 10. Documentation complémentaire
+## 11. Documentation complémentaire
 
 - [Modèle Conceptuel de Données (MCD)](./docs/mcd.md)
 - [User Stories et Critères d'acceptation](./docs/user-stories.md)
 - [Scénarios BDD (Gherkin)](./docs/bdd-scenarios.md)
+- [Application mobile Android — Capacitor](./docs/mobile.md)
 - [Documentation API interactive](http://localhost:5000/api/docs) *(en local)*
 
 ---
